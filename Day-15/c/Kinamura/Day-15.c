@@ -17,52 +17,25 @@ int checkOverlap(int x, int y) {
     return 0;
 }
 
+int checkSingleEdge(int x, int y, int dirX, int dirY, int dist) {
+	for( int i = 0; i <= dist; i++) {          
+        	if(checkOverlap(x,y) == 0) {
+        		fprintf(stdout, "%lld\n", ((long long)x*4000000) + y );
+        	return 1;
+            	}
+        x += dirX;
+        y += dirY; 
+        }
+	return 0;
+}
+
 void part2() {
     for( int i = 0; i < counter; i++) {
         int dist = sensor[i][2];
-        int x = sensor[i][0] - (dist + 1);
-        int y = sensor[i][1];
-        for( int j = 0; j <= sensor[i][2]; j++) {          
-            if(checkOverlap(x,y) == 0) {
-                fprintf(stdout, "%lld\n", ((long long)x*4000000) + y );
-                return;
-            }
-            x++;
-            y++;
-        }
-        dist = sensor[i][2];
-        x = sensor[i][0] + (dist + 1);
-        y = sensor[i][1];
-        for( int j = 0; j <= sensor[i][2]; j++) {           
-            if(checkOverlap(x,y) == 0) {
-                fprintf(stdout, "%lld\n", ((long long)x*4000000) + y );
-                return;
-            }
-            x--;
-            y--;
-        }
-        dist = sensor[i][2];
-        x = sensor[i][0];
-        y = sensor[i][1] - (dist + 1);
-        for( int j = 0; j <= sensor[i][2]; j++) {            
-            if(checkOverlap(x,y) == 0) {
-                fprintf(stdout, "%lld\n", ((long long)x*4000000) + y );
-                return;
-            }
-            x--;
-            y++;
-        }   
-        dist = sensor[i][2];
-        x = sensor[i][0];
-        y = sensor[i][1] + (dist + 1);
-        for( int j = 0; j <= sensor[i][2]; j++) {
-            if(checkOverlap(x,y) == 0) {
-                fprintf(stdout, "%lld\n", ((long long)x*4000000) + y );
-                return;
-            }
-            x++;
-            y--;
-        }
+	if(checkSingleEdge(sensor[i][0] - (dist + 1), sensor[i][1],1,1,dist) == 1) { return; }
+	if(checkSingleEdge(sensor[i][0] - (dist + 1), sensor[i][1],-1,-1,dist) == 1) { return; }
+	if(checkSingleEdge(sensor[i][0] - (dist + 1), sensor[i][1],-1,1,dist) == 1) { return; }
+	if(checkSingleEdge(sensor[i][0] - (dist + 1), sensor[i][1],1,-1,dist) == 1) { return; }
     }
     return;
 }
