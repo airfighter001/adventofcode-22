@@ -2,72 +2,78 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <limits.h>
 
-int getNumberDigits(int number) {
-    int digits = 1;
-    while(number > 9) {
-        number /= 10;
-        digits++;
-    }
-    return digits;
+char getClosestOption(long number, long *currNumber, int exponent) {
+	long diffs[5];
+	diffs[0] = 2 * (long)powl(5,exponent);
+	diffs[1] = 1 * (long)powl(5,exponent);
+	diffs[2] = 0;
+	diffs[3] = -1 * (long)powl(5,exponent);
+	diffs[4] = -2 * (long)powl(5,exponent);
+
+	long diff = LONG_MAX;
+	for(int i = 0; i < 5; i++) {
+		if(labs(number - (*currNumber + diffs[i])) < labs(number - (*currNumber + diff))) {
+			diff = diffs[i];
+		}
+	}
+
+	*currNumber += diff;
+	if(diff == diffs[0]) {
+		return '2';
+	}
+	if(diff == diffs[1]) {
+		return '1';
+	}
+	if(diff == diffs[2]) {
+		return '0';
+	}
+	if(diff == diffs[3]) {
+		return '-';
+	}
+	if(diff == diffs[4]) {
+		return '=';
+	}
+	return 'f';
 }
 
-int getExponent(int number) {
-    int digits = 2 * getNumberDigits(number);
-    for(int i = digits; i >= 0; i++) {
-        if( (2 * pow(5,digits) + 2 * pow(5,digits-1)) >= number &&
-        (2 * pow(5,digits-1) + 2 * pow(5,digits-2)) <= number) {
-            return i;
-        }
-    }
-    return 0;
+long maxValueExponent(int exponent) {
+	long maxValue = 0;
+	for (int i = 0; i <= exponent; i++) {
+		maxValue += 2 * (long)powl(5,i);
+	}
+	return maxValue;
 }
 
-// check the fuckery
-// wtf am I doing here
-char getDigit(int number) {
-    int exponent = getExponent(number);
-    if( 2 * pow(5,exponent) >= number) {
-        return '2';
-    }
-    if( pow(5,exponent) >= number) {
-        return '1';
-    }
-    if( 2 * pow(5,exponent-1) + 2 * pow(5,exponent-2) >= number) {
-        return '0';
-    }
-    if( 2 * pow(5,exponent-1) + 2 * pow(5,exponent-2) >= number - pow(5,exponent)) {
-        return '-';
-    }
-    if( 2 * pow(5,exponent-1) + 2 * pow(5,exponent-2) >= number - 2 * pow(5,exponent)) {
-        return '=';
-    }
-    fprintf(stdout,"passt so nicht\n");
-    return -1;
+char * convertToSNAFU(long number) {
+	char * convertedNumber = NULL;
+	int digits = 0;
+	long currNumber = 0;
+	while(maxValueExponent(digits) < number) {
+		digits++;
+	}
+	convertedNumber = malloc(digits * sizeof(char));
+	for(int i = digits; i >= 0; i--) {
+		char currentSymbol = getClosestOption(number,&currNumber,i);
+		convertedNumber[digits - i] = currentSymbol;
+	}
+	return convertedNumber;
 }
 
-char * convertToSNAFU(int number) {
-    char *convertedNumber = malloc(128);
-    while( number > 0 ) {
-        getDigit(number);
-    }
-    return convertedNumber;
-}
-
-int getDigitValue(int power, char digit) {
-    int digitValue;
+long getDigitValue(int power, char digit) {
+    long digitValue;
     switch(digit) {
-        case '2': digitValue = 2; break;
-        case '1': digitValue = 1; break;
-        case '0': digitValue = 0; break;
-        case '-': digitValue = -1; break;
-        case '=': digitValue = -2; break;
+        case '2': return (long)(2 * powl(5,power));
+        case '1': return (long)(powl(5,power));
+        case '0': return 0;
+        case '-': return (long)(-1 * powl(5,power));
+        case '=': return (long)(-2 * powl(5,power));
     }
-    return digitValue * pow(5,power);
 }
 
-int addFuelLine(int digits, char number[digits]) {
-    int numberValue = 0;
+long addFuelLine(int digits, char number[digits]) {
+    long numberValue = 0;
     for (int i = 0; i < digits; i++) {
         numberValue += getDigitValue(digits - i - 1, number[i]);
     }
@@ -75,8 +81,8 @@ int addFuelLine(int digits, char number[digits]) {
 }
 
 int main() {
-    FILE *input = fopen("testinput.txt","r");
-    int sumFuel = 0;
+    FILE *input = fopen("Input_Day-25.txt","r");
+    long sumFuel = 0;
 
     if(input != NULL) {
         char line[64];
@@ -84,9 +90,9 @@ int main() {
             sumFuel += addFuelLine( strlen(line) - 1, line);
         }
     }
-    fprintf(stdout, "Fuel Values summed up: %d\n", sumFuel);
-    char convertedSum[128];
-    strcpy(convertedSum, convertToSNAFU(sumFuel));
+    fprintf(stdout, "Fuel Values summed up: %ld\n", sumFuel);
+    char * convertedSum = convertToSNAFU(sumFuel);
+    fprintf(stdout, "Fuel sum in SNAFU: %s\n", convertedSum);
 
     return 0;
 }
